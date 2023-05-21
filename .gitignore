@@ -1,5 +1,9 @@
 
 .idea
 __pycache__
+obis_ds_locator.egg-info
+src/build
+src/dist
+
 *.csv
 ds_locations
