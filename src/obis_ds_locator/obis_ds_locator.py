@@ -20,6 +20,10 @@ def connect_to_openbis(url='', verify_certificates=False, token=None, login=None
                 allow_http_but_do_not_use_this_in_production_and_only_within_safe_networks=True)
 
     if not o.is_session_active():
+        if not login:
+            raise ValueError('obis login is required')
+        if not password:
+            raise ValueError('obis password is required')
         o.login(login, password)
 
     return o
@@ -97,7 +101,7 @@ def get_datasets_locations_from_db(host, user, password, database="pathinfo_prod
     return df
 
 
-def get_datasets_metadata(locations:pd.DataFrame, argv):
+def get_datasets_metadata(locations: pd.DataFrame, argv):
     o = connect_to_openbis(url=argv.openbis, login=argv.user, password=argv.password)
 
     page = 0
@@ -143,13 +147,14 @@ def parse_arguments(args):
     return parser.parse_args(args)
 
 
-def locate(argv):
-    locations = get_datasets_locations_from_db(host=argv.db_host, user=argv.db_user, password=argv.db_user, database=argv.db_name )
+def locate_datasets_info(argv):
+    locations = get_datasets_locations_from_db(host=argv.db_host, user=argv.db_user, password=argv.db_user,
+                                               database=argv.db_name)
     metadata = get_datasets_metadata(locations, argv)
     return metadata
 
 
-def handle_missing(metadata:pd.DataFrame, print_id=True, out=sys.stderr):
+def handle_missing(metadata: pd.DataFrame, print_id=True, out=sys.stderr):
     missing = metadata.loc[metadata['DataSetLocation'] == 'missing']
     missing_nr = len(missing)
     if missing_nr > 0:
@@ -158,7 +163,8 @@ def handle_missing(metadata:pd.DataFrame, print_id=True, out=sys.stderr):
             print(missing['DataSetId'].to_string(index=False), file=out)
     return missing_nr
 
-def store_locations(metadata: pd.DataFrame, argv):
+
+def store_ds_metadata(metadata: pd.DataFrame, argv):
     dir = argv.location
     if not dir:
         dir = '../..'
@@ -169,18 +175,9 @@ def store_locations(metadata: pd.DataFrame, argv):
     return path
 
 
-def main(args):
-    print('ds locator starts')
-    #argv = parse_arguments(['-o', 'https://sce-bio-c03486.ed.ac.uk', '-u', 'test', '-p', 'test', '-i', 'localhost', '-a', 'postgres', '-l', 'ds_locations'])
-    argv = parse_arguments(args)
-    print(argv)
-
-    metadata = locate(argv)
+def locate_and_save(argv):
+    metadata = locate_datasets_info(argv)
     missing = handle_missing(metadata)
 
     print("Located {} datasets, missing {}".format(len(metadata) - missing, missing))
-
-    store_locations(metadata, argv)
-
-if __name__ == "__main__":
-   main(sys.argv[1:])
+    store_ds_metadata(metadata, argv)
