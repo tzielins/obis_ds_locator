@@ -161,7 +161,7 @@ def handle_missing(metadata:pd.DataFrame, print_id=True, out=sys.stderr):
 def store_locations(metadata: pd.DataFrame, argv):
     dir = argv.location
     if not dir:
-        dir = '.'
+        dir = '../..'
 
     Path(dir).mkdir(parents=True, exist_ok=True)
     path = os.path.join(dir, 'datasets-locations-{}.csv'.format(datetime.today().strftime('%Y-%m-%d')))
@@ -169,75 +169,18 @@ def store_locations(metadata: pd.DataFrame, argv):
     return path
 
 
-print("I started")
+def main(args):
+    print('ds locator starts')
+    #argv = parse_arguments(['-o', 'https://sce-bio-c03486.ed.ac.uk', '-u', 'test', '-p', 'test', '-i', 'localhost', '-a', 'postgres', '-l', 'ds_locations'])
+    argv = parse_arguments(args)
+    print(argv)
 
-argv = parse_arguments(['-o', 'https://sce-bio-c03486.ed.ac.uk', '-u', 'test', '-p', 'test',
-                     '-i', 'localhost', '-a', 'postgres', '-l', 'ds_locations',
-                     ])
-print(argv)
+    metadata = locate(argv)
+    missing = handle_missing(metadata)
 
-metadata = locate(argv)
-missing = handle_missing(metadata)
+    print("Located {} datasets, missing {}".format(len(metadata) - missing, missing))
 
-print("Located {} datasets, missing {}".format(len(metadata) - missing, missing))
+    store_locations(metadata, argv)
 
-store_locations(metadata, argv)
-
-sys.exit(1)
-
-# conn = psycopg2.connect(database="pathinfo_prod", host="localhost", user="postgres")
-# print(conn.status)
-
-# sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;"
-# sql = "SELECT code, location FROM data_sets;"
-
-# cursor = conn.cursor()
-# cursor.execute(sql)
-
-# resp = cursor.fetchall()
-
-# df = pd.DataFrame(resp, columns =['DataSetId', 'DataSetLocation'])
-# df = df.set_index('DataSetId', drop=False)
-# print(df)
-
-# conn.close()
-
-locations = get_datasets_locations_from_db(host="localhost", user="postgres", password=None)
-
-o = connect_to_openbis(url='https://sce-bio-c03486.ed.ac.uk', login='test', password='test')
-
-page = 0
-page_size = 20
-page_left = True
-
-df = out_data_frame()
-
-while page_left:
-    datasets = get_datasets_page(o, page=page, page_size=page_size)
-    page += 1
-    page_left = len(datasets) > 0
-    # print(len(datasets))
-
-    rows = [df]
-    for dataset in datasets:
-        # inspect_dataset(dataset)
-        dr = dataset_to_row(dataset, locations)
-        # print(dr.to_string())
-        rows.append(dr)
-
-    df = pd.concat(rows)
-
-df = df.set_index('DataSetId', drop=False)
-
-# for id, row in df.iterrows():
-#    print(id)
-#    print(row)
-# print(df.to_string())
-
-missing = df.loc[df['DataSetLocation'] == 'missing']
-
-if len(missing) > 0:
-    print("Missing locations for datasets")
-    print(missing['DataSetId'].to_string(index=False))
-
-print("Located {} datasets, missing {}".format(len(df) - len(missing), len(missing)))
+if __name__ == "__main__":
+   main(sys.argv[1:])
