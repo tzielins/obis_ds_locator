@@ -24,7 +24,7 @@ def connect_to_openbis(url='', verify_certificates=False, token=None, login=None
             raise ValueError('obis login is required')
         if not password:
             raise ValueError('obis password is required')
-        o.login(login, password)
+        o.login(login, password, save_token=False)
 
     return o
 
