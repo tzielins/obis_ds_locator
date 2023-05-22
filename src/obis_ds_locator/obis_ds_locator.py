@@ -115,7 +115,7 @@ def get_datasets_metadata(locations: pd.DataFrame, argv):
         datasets = get_datasets_page(o, page=page, page_size=page_size)
         page += 1
         page_left = len(datasets) > 0
-
+        print("Page {} of {}".format(page, len(locations) % page_size ))
         rows = [df]
         for dataset in datasets:
             # inspect_dataset(dataset)
