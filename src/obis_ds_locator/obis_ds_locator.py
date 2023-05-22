@@ -3,12 +3,13 @@ import sys
 import time
 import shutil
 import tempfile
-import argparse
+
 from pathlib import Path
 from datetime import datetime
 
 import pandas as pd
 import psycopg2
+import logging
 
 from pybis import Openbis, DataSet
 
@@ -32,14 +33,6 @@ def connect_to_openbis(url='', verify_certificates=False, token=None, login=None
 def get_datasets_page(o: Openbis, page=0, page_size=40):
     return o.get_datasets(props=['$NAME'], start_with=page * page_size, count=page_size)
 
-
-def inspect_dataset(dataset: DataSet):
-    print("{} {}".format(dataset.permId, dataset.props['$name']))
-    print(dataset.attrs)
-    # print("S{} {}".format(dataset.sample.code, dataset.sample.props['$name']))
-    # print("E{} {}".format(dataset.experiment.permId, dataset.sample.props.get('$NAME')))
-
-
 def out_data_frame():
     columns = ['SampleId', 'SampleCode', 'SampleName', 'ExperimentId', 'ExperimentCode', 'ExperimentName',
                'DataSetId', 'DataSetName', 'DataSetLocation', 'DataSetFiles']
@@ -57,7 +50,8 @@ def dataset_to_row(dataset: DataSet, locations: pd.DataFrame, out=sys.stderr):
     try:
         files = ', '.join(dataset.file_list)
     except ValueError as E:
-        print("Cannot get files for {}: {}".format(dataset.permId, E), file=out)
+        #print("Cannot get files for {}: {}".format(dataset.permId, E), file=out)
+        logging.error("Cannot get files for {}: {}".format(dataset.permId, E), exc_info=True)
 
     row = {
         'DataSetId': dataset.permId,
@@ -115,7 +109,7 @@ def get_datasets_metadata(locations: pd.DataFrame, argv):
         datasets = get_datasets_page(o, page=page, page_size=page_size)
         page += 1
         page_left = len(datasets) > 0
-        print("Page {} of {}".format(page, len(locations) % page_size ))
+        logging.info("Page {} of {}".format(page, len(locations) // page_size))
         rows = [df]
         for dataset in datasets:
             # inspect_dataset(dataset)
@@ -129,26 +123,6 @@ def get_datasets_metadata(locations: pd.DataFrame, argv):
     return df
 
 
-def parse_arguments(args=None):
-    parser = argparse.ArgumentParser(
-        prog='obis_ds_locator',
-        description="Maps physical locations of datasets folders and puts them in a table with basic information " \
-                    "about datasets, samples and experiments."
-    )
-
-    parser.add_argument("-o", "--openbis", help="url of OpenBis instance", default="https://localhost")
-    parser.add_argument("-p", "--password", help="OpenBIS password")
-    parser.add_argument("-u", "--user", help="OpenBis User")
-    parser.add_argument("-i", "--db_host", help="database server", default="localhost")
-    parser.add_argument("-d", "--db_name", help="path info database name", default="pathinfo_prod")
-    parser.add_argument("-a", "--db_user", help="database user", default="postgres")
-    parser.add_argument("-s", "--db_password", help="database password")
-    parser.add_argument("-l", "--location", help="path to output files location", default='ds_locations')
-
-    if args:
-        return parser.parse_args(args)
-    else:
-        return parser.parse_args()
 
 
 def locate_datasets_info(argv):
@@ -163,8 +137,11 @@ def handle_missing(metadata: pd.DataFrame, print_id=True, out=sys.stderr):
     missing_nr = len(missing)
     if missing_nr > 0:
         if print_id:
-            print("Missing dataset ids", file=out)
-            print(missing['DataSetId'].to_string(index=False), file=out)
+            #print("Missing dataset ids", file=out)
+            #print(missing['DataSetId'].to_string(index=False), file=out)
+            logging.info("Missing datasets")
+            logging.info(missing['DataSetId'].to_string(index=False))
+
     return missing_nr
 
 
@@ -183,5 +160,6 @@ def locate_and_save(argv):
     metadata = locate_datasets_info(argv)
     missing = handle_missing(metadata)
 
-    print("Located {} datasets, missing {}".format(len(metadata) - missing, missing))
+    #print("Located {} datasets, missing {}".format(len(metadata) - missing, missing))
+    logging.info("Located {} datasets, missing {}".format(len(metadata) - missing, missing))
     store_ds_metadata(metadata, argv)

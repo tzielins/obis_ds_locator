@@ -5,6 +5,7 @@ obis_ds_locator.egg-info
 src/build
 src/dist
 
+*.LOG
 locate.sh
 *.csv
 ds_locations
