@@ -5,8 +5,11 @@ stores them in a log file.
 
 ## Setup
 
+```
 conda install -c anaconda psycopg2
-(cause pip cannot install psycopg2 on its own)
+# cause pip cannot install psycopg2 on its own
+```
+
 
 cd src
 pip install .
