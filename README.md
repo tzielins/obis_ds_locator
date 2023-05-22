@@ -6,13 +6,18 @@ stores them in a log file.
 ## Setup
 
 ```
+conda create -n ds-locations python=3.8
+conda activate ds-locations
 conda install -c anaconda psycopg2
 # cause pip cannot install psycopg2 on its own
+
+git clone https://github.com/tzielins/obis_ds_locator.git
+cd obis_ds_locator/src
+pip install .
 ```
 
 
-cd src
-pip install .
+
 
 ## Usage
 ```
