@@ -88,9 +88,10 @@ def dataset_to_row(dataset: DataSet, locations: pd.DataFrame, out=sys.stderr):
 # do it
 
 def get_datasets_locations_from_db(host, user, password, database="pathinfo_prod"):
-    conn = psycopg2.connect(database=database, host=host, user=user, password=password)
-    sql = "SELECT code, location FROM data_sets;"
 
+    conn = psycopg2.connect(database=database, host=host, user=user, password=password)
+
+    sql = "SELECT code, location FROM data_sets;"
     cursor = conn.cursor()
     cursor.execute(sql)
     resp = cursor.fetchall()
@@ -151,7 +152,7 @@ def parse_arguments(args=None):
 
 
 def locate_datasets_info(argv):
-    locations = get_datasets_locations_from_db(host=argv.db_host, user=argv.db_user, password=argv.db_user,
+    locations = get_datasets_locations_from_db(host=argv.db_host, user=argv.db_user, password=argv.db_password,
                                                database=argv.db_name)
     metadata = get_datasets_metadata(locations, argv)
     return metadata
