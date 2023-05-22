@@ -128,7 +128,7 @@ def get_datasets_metadata(locations: pd.DataFrame, argv):
     return df
 
 
-def parse_arguments(args):
+def parse_arguments(args=None):
     parser = argparse.ArgumentParser(
         prog='obis_ds_locator',
         description="Maps physical locations of datasets folders and puts them in a table with basic information " \
@@ -142,9 +142,12 @@ def parse_arguments(args):
     parser.add_argument("-d", "--db_name", help="path info database name", default="pathinfo_prod")
     parser.add_argument("-a", "--db_user", help="database user", default="postgres")
     parser.add_argument("-s", "--db_password", help="database password")
-    parser.add_argument("-l", "--location", help="path to output files location", default='.')
+    parser.add_argument("-l", "--location", help="path to output files location", default='ds_locations')
 
-    return parser.parse_args(args)
+    if args:
+        return parser.parse_args(args)
+    else:
+        return parser.parse_args()
 
 
 def locate_datasets_info(argv):

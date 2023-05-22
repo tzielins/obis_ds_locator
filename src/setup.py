@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 setup(
     name='obis_ds_locator',
     packages=find_packages(include=['obis_ds_locator']),
-    version='0.1.0',
+    version='0.1.1',
     description='Outputs physical locations of datasets',
     author='Tomasz Zielinski',
     license='MIT',
