@@ -76,7 +76,7 @@ def dataset_to_row(dataset: DataSet, locations: pd.DataFrame, out=sys.stderr):
 
     row = {
         'DataSetId': dataset.permId,
-        'DataSetName': dataset.props['NAME'] if dataset.props['NAME'] else dataset.props['$name'],
+        'DataSetName': dataset.props['name'] if dataset.props['name'] else dataset.props['$name'],
         'DataSetType': dataset.type,
         'DataSetRegistration': dataset.registrationDate,
         'DataSetLocation': location,
@@ -88,7 +88,7 @@ def dataset_to_row(dataset: DataSet, locations: pd.DataFrame, out=sys.stderr):
         row.update({
             'SampleId': dataset.sample.permId,
             'SampleCode': dataset.sample.code,
-            'SampleName': dataset.sample.props['NAME'] if dataset.sample.props['NAME'] else dataset.sample.props[
+            'SampleName': dataset.sample.props['name'] if dataset.sample.props['name'] else dataset.sample.props[
                 '$name']
         })
 
@@ -97,7 +97,7 @@ def dataset_to_row(dataset: DataSet, locations: pd.DataFrame, out=sys.stderr):
             'ExperimentId': dataset.experiment.permId,
             # Code stored as an attribute dataset.attrs.experiment  but with space path
             'ExperimentCode': dataset.experiment.code,
-            'ExperimentName': dataset.experiment.props['NAME'] if dataset.experiment.props['NAME'] else
+            'ExperimentName': dataset.experiment.props['name'] if dataset.experiment.props['name'] else
             dataset.experiment.props['$name']
         })
 
