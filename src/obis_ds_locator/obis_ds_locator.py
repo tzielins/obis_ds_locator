@@ -1,15 +1,14 @@
+import argparse
+import logging
 import os
 import sys
-import argparse
-
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 import psycopg2
-import logging
-
 from pybis import Openbis, DataSet
+
 
 def parse_arguments(args=None):
     parser = argparse.ArgumentParser(
@@ -34,8 +33,6 @@ def parse_arguments(args=None):
         return parser.parse_args()
 
 
-
-
 def connect_to_openbis(url='', verify_certificates=False, token=None, login=None, password=None):
     o = Openbis(url=url,
                 verify_certificates=verify_certificates,
@@ -55,9 +52,11 @@ def connect_to_openbis(url='', verify_certificates=False, token=None, login=None
 def get_datasets_page(o: Openbis, page=0, page_size=40):
     return o.get_datasets(props=['$NAME'], start_with=page * page_size, count=page_size)
 
+
 def out_data_frame():
-    columns = ['SampleId', 'SampleCode', 'SampleName', 'ExperimentId', 'ExperimentCode', 'ExperimentName',
-               'DataSetId', 'DataSetName', 'DataSetLocation', 'DataSetFiles']
+    columns = ['DataSetId', 'DataSetName', 'DataSetType', 'DataSetRegistration', 'DataSetLocation', 'DataSetFiles',
+               'SampleId', 'SampleCode', 'SampleName', 'ExperimentId', 'ExperimentCode', 'ExperimentName',
+               ]
     return pd.DataFrame(columns=columns)
 
 
@@ -72,12 +71,14 @@ def dataset_to_row(dataset: DataSet, locations: pd.DataFrame, out=sys.stderr):
     try:
         files = ', '.join(dataset.file_list)
     except ValueError as E:
-        #print("Cannot get files for {}: {}".format(dataset.permId, E), file=out)
+        # print("Cannot get files for {}: {}".format(dataset.permId, E), file=out)
         logging.error("Cannot get files for {}: {}".format(dataset.permId, E), exc_info=True)
 
     row = {
         'DataSetId': dataset.permId,
-        'DataSetName': dataset.props['$name'],
+        'DataSetName': dataset.props['NAME'] if dataset.props['NAME'] else dataset.props['$name'],
+        'DataSetType': dataset.type,
+        'DataSetRegistration': dataset.registrationDate,
         'DataSetLocation': location,
         'DataSetFiles': files
     }
@@ -87,7 +88,8 @@ def dataset_to_row(dataset: DataSet, locations: pd.DataFrame, out=sys.stderr):
         row.update({
             'SampleId': dataset.sample.permId,
             'SampleCode': dataset.sample.code,
-            'SampleName': dataset.sample.props['$name']
+            'SampleName': dataset.sample.props['NAME'] if dataset.sample.props['NAME'] else dataset.sample.props[
+                '$name']
         })
 
     if dataset.attrs.experiment:
@@ -95,7 +97,8 @@ def dataset_to_row(dataset: DataSet, locations: pd.DataFrame, out=sys.stderr):
             'ExperimentId': dataset.experiment.permId,
             # Code stored as an attribute dataset.attrs.experiment  but with space path
             'ExperimentCode': dataset.experiment.code,
-            'ExperimentName': dataset.experiment.props['$name']
+            'ExperimentName': dataset.experiment.props['NAME'] if dataset.experiment.props['NAME'] else
+            dataset.experiment.props['$name']
         })
 
     return pd.DataFrame(row, index=[0])
@@ -104,7 +107,6 @@ def dataset_to_row(dataset: DataSet, locations: pd.DataFrame, out=sys.stderr):
 # do it
 
 def get_datasets_locations_from_db(host, user, password, database="pathinfo_prod"):
-
     conn = psycopg2.connect(database=database, host=host, user=user, password=password)
 
     sql = "SELECT code, location FROM data_sets;"
@@ -145,8 +147,6 @@ def get_datasets_metadata(locations: pd.DataFrame, argv):
     return df
 
 
-
-
 def locate_datasets_info(argv):
     locations = get_datasets_locations_from_db(host=argv.db_host, user=argv.db_user, password=argv.db_password,
                                                database=argv.db_name)
@@ -159,8 +159,8 @@ def handle_missing(metadata: pd.DataFrame, print_id=True, out=sys.stderr):
     missing_nr = len(missing)
     if missing_nr > 0:
         if print_id:
-            #print("Missing dataset ids", file=out)
-            #print(missing['DataSetId'].to_string(index=False), file=out)
+            # print("Missing dataset ids", file=out)
+            # print(missing['DataSetId'].to_string(index=False), file=out)
             logging.info("Missing datasets")
             logging.info(missing['DataSetId'].to_string(index=False))
 
@@ -182,6 +182,6 @@ def locate_and_save(argv):
     metadata = locate_datasets_info(argv)
     missing = handle_missing(metadata)
 
-    #print("Located {} datasets, missing {}".format(len(metadata) - missing, missing))
+    # print("Located {} datasets, missing {}".format(len(metadata) - missing, missing))
     logging.info("Located {} datasets, missing {}".format(len(metadata) - missing, missing))
     store_ds_metadata(metadata, argv)
