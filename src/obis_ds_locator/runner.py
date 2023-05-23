@@ -1,9 +1,7 @@
-import sys
-import time
+import time, sys
 import logging
 
-from obis_ds_locator import locate_and_save
-from command_line import parse_arguments
+from obis_ds_locator import locate_and_save, parse_arguments
 
 def main():
 
@@ -16,7 +14,7 @@ def main():
 
     try:
         # -o https://sce-bio-c03486.ed.ac.uk -u test -p test -i localhost -a postgres -l ds_locations
-        argv = parse_arguments(['-o', 'https://sce-bio-c03486.ed.ac.uk', '-u', 'test', '-p', 'test', '-i', 'localhost', '-a', 'postgres', '-l', 'ds_locations'])
+        #argv = parse_arguments(['-o', 'https://sce-bio-c03486.ed.ac.uk', '-u', 'test', '-p', 'test', '-i', 'localhost', '-a', 'postgres', '-l', 'ds_locations'])
         #print(argv)
 
         locate_and_save(argv)
