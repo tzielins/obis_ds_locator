@@ -9,3 +9,4 @@ src/dist
 locate.sh
 *.csv
 ds_locations
+ds_locations_check.csv
