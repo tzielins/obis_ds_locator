@@ -30,4 +30,9 @@ obis_ds_locator -u test -p test
 
 ```
 
+There is also a module consistency_checker.py whic takes as input the locations
+found by obis_ds_locator and checks if the listed files are actually present on the disk.
 
+```
+python obis_ds_locator/consistency_checker.py -s path-to-obisstorage -l path-to-datasets-locations.csv -f 'optional location of report file'
+```
