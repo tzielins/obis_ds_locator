@@ -69,7 +69,7 @@ def dataset_to_row(dataset: DataSet, locations: pd.DataFrame, out=sys.stderr):
 
     files = ''
     try:
-        files = ', '.join(dataset.file_list)
+        files = ';; '.join(dataset.file_list)
     except ValueError as E:
         # print("Cannot get files for {}: {}".format(dataset.permId, E), file=out)
         logging.error("Cannot get files for {}: {}".format(dataset.permId, E), exc_info=True)

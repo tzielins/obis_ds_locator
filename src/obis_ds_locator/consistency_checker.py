@@ -1,4 +1,4 @@
-import os
+import os, sys
 import argparse
 import pandas as pd
 
@@ -35,7 +35,7 @@ def check_files(store: str, ds_location: str, files_names: str):
     present = []
     missing = []
 
-    for file_name in files_names.split(","):
+    for file_name in files_names.split(';; '):
         file_name = file_name.strip()
         file_path = dataset_file_path(store, ds_location, file_name)
         if os.path.isfile(file_path):
